@@ -1,0 +1,61 @@
+services:
+  fixtures:
+    build:
+      context: .
+      dockerfile: tests/Dockerfile.fixtures
+    volumes:
+      - test-library:/fixtures
+  initialize:
+    build:
+      context: .
+      target: runtime
+    image: kapitel:test-runtime
+    entrypoint: /bin/sh
+    command:
+      - -ec
+      - |
+        for name in owner chromium webkit; do
+          printf '%s' 'synthetic browser test password' | kapitel user create "$$name" --admin --password-stdin
+        done
+    volumes:
+      - test-state:/data
+  kapitel:
+    image: kapitel:test-runtime
+    depends_on:
+      fixtures:
+        condition: service_completed_successfully
+      initialize:
+        condition: service_completed_successfully
+    environment:
+      KAPITEL_PUBLIC_URL: http://localhost:8080
+      KAPITEL_SCAN_INTERVAL_SECONDS: "5"
+    volumes:
+      - test-library:/library:ro
+      - test-state:/data
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 512m
+  browser-tests:
+    build:
+      context: .
+      dockerfile: tests/Dockerfile.browser
+    network_mode: service:kapitel
+    depends_on:
+      kapitel:
+        condition: service_started
+    environment:
+      TEST_BASE_URL: http://localhost:8080
+    volumes:
+      - ./test-results:/results
+  benchmark:
+    image: python:3.13-slim
+    network_mode: service:kapitel
+    entrypoint: python
+    command: /benchmark.py
+    volumes:
+      - ./tests/benchmark.py:/benchmark.py:ro
+      - test-library:/library
+volumes:
+  test-library:
+  test-state:

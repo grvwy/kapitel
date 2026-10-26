@@ -1,0 +1,7 @@
+/target/
+/data/
+/library/
+/test-results/
+/node_modules/
+.env
+*.sqlite*
