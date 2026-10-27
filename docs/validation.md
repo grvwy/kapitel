@@ -12,9 +12,10 @@ media. No real library, production database or deployed service was changed.
 | Cargo audit, 309 locked packages | Passed with one reviewed maintenance notice; see [security](../SECURITY.md) |
 | GitHub Actions workflow / Compose configuration / shell syntax | Passed |
 | Release Docker build and complete `scripts/test-browser.sh` | Passed |
-| Server resident memory after indexing 1,000 books | 32,420 KiB (31.7 MiB); budget 128 MiB |
-| Authenticated 50-book page, 30 local requests | Median 5.25 ms, p95 6.20 ms |
-| Runtime image, Linux amd64 | 129,871,950 bytes uncompressed; UID/GID 10001 |
+| Server resident memory after indexing 1,000 books, telemetry off | 33,796 KiB (33.0 MiB); budget 128 MiB |
+| Authenticated 50-book page, 30 local requests, telemetry off | Median 6.34 ms, p95 7.24 ms |
+| Same browser/scale checks, telemetry on and collector unavailable | Passed; 35,036 KiB RSS, median 5.00 ms, p95 6.69 ms |
+| Runtime image, Linux amd64 | 137,052,821 bytes uncompressed; UID/GID 10001 |
 
 Browser checks cover MP3 and AAC M4B loading, embedded chapters, cross-device
 resume, intentional rewind, stale-tab rejection, network recovery, playback
@@ -37,7 +38,9 @@ exceeding the bounded telemetry queue. No live credentials or backend are used.
 The scale check indexed 2 short audiobooks, 6 EPUBs and 992 small, distinct PDF
 fixtures from disk. These are local warm API timings, not internet latency or
 a benchmark of large audiobook imports. Both browsers passed against the
-optimized runtime image. The test script removed its containers and volumes
+optimized runtime image with telemetry disabled, then again with telemetry
+enabled and its collector unreachable. These separate timing samples are not
+evidence of a performance improvement. The test scripts removed containers and volumes
 after success.
 
 ## Remaining device gate
