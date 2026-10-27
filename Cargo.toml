@@ -15,7 +15,11 @@ axum = { version = "0.8", features = ["macros"] }
 image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp"] }
 lofty = "0.25"
 mp4ameta = "0.13"
+opentelemetry = { version = "0.33", default-features = false, features = ["trace", "internal-logs"] }
+opentelemetry_sdk = { version = "0.33", default-features = false, features = ["trace"] }
+opentelemetry-otlp = { version = "0.33", default-features = false, features = ["trace", "http-proto", "reqwest-blocking-client", "reqwest-rustls"] }
 quick-xml = "0.42"
+reqwest = { version = "0.13", default-features = false, features = ["blocking", "rustls"] }
 rpassword = "7"
 rustix = { version = "1", features = ["fs", "process"] }
 serde = { version = "1", features = ["derive"] }
@@ -34,6 +38,8 @@ uuid = { version = "1", features = ["v4"] }
 zip = { version = "9", default-features = false, features = ["deflate"] }
 
 [dev-dependencies]
+opentelemetry-proto = { version = "0.33", default-features = false, features = ["gen-tonic-messages", "trace"] }
+prost = "0.14"
 http-body-util = "0.1"
 tempfile = "3"
 tower = { version = "0.5", features = ["util"] }

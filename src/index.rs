@@ -492,7 +492,10 @@ pub async fn run(state: AppState) {
     let mut scanner = Scanner::default();
     loop {
         state.scan_status.lock().await.running = true;
-        match scanner.scan(&state).await {
+        let scan_started_at = std::time::SystemTime::now();
+        let result = scanner.scan(&state).await;
+        crate::telemetry::scan_finished(&state, scan_started_at, result.is_ok()).await;
+        match result {
             Ok(()) => {
                 *state.scan_status.lock().await = ScanStatus {
                     running: false,

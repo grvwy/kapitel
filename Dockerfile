@@ -32,6 +32,7 @@ LABEL org.opencontainers.image.source="https://github.com/grvwy/kapitel" \
 RUN groupadd --gid 10001 kapitel && useradd --uid 10001 --gid 10001 --no-create-home kapitel \
     && mkdir /library /data && chown 10001:10001 /data
 COPY --from=build /kapitel /usr/local/bin/kapitel
+COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 USER 10001:10001
 ENV KAPITEL_LIBRARY_DIRECTORY=/library KAPITEL_DATA_DIRECTORY=/data
 EXPOSE 8080

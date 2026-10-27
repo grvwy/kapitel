@@ -115,11 +115,50 @@ repository, not in this project.
 | `KAPITEL_LIBRARY_DIRECTORY` | `/library` | Read-only path inside the container |
 | `KAPITEL_DATA_DIRECTORY` | `/data` | Writable application state |
 | `KAPITEL_SCAN_INTERVAL_SECONDS` | `30` | At least 5 seconds |
-| `RUST_LOG` | `kapitel=info` | Rust log filter |
+| `KAPITEL_TELEMETRY_ENABLED` | `false` | Opt in to operational OTLP traces |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | unset | HTTP(S) base URL; required when telemetry is enabled |
+| `OTEL_EXPORTER_OTLP_HEADERS` | unset | Optional OTLP authentication headers; keep secret |
+| `RUST_LOG` | Kapitel info, exporter warnings | Rust log filter |
 
 `KAPITEL_LIBRARY_PATH` configures the Compose host mount. Configuration errors
 prevent startup. Logs go to stdout/stderr. No analytics, external fonts or
 external metadata requests are used.
+
+## Optional telemetry
+
+Telemetry is **off by default**. Setting an endpoint alone does not enable it.
+When disabled, Kapitel creates no telemetry provider, exporter, worker or spans.
+Normal local startup/error logs remain available independently.
+
+To enable traces, set both `KAPITEL_TELEMETRY_ENABLED=true` and
+`OTEL_EXPORTER_OTLP_ENDPOINT=http://your-collector:4318`. Kapitel sends
+OTLP/HTTP protobuf to that base URL plus `/v1/traces`; prefixes such as
+`https://observe.example.org/api/default` are supported. There is no default
+destination or vendor dependency. A missing or invalid endpoint prevents startup
+when opted in. Use HTTPS when leaving a trusted private container network.
+The only supported transport is HTTP/protobuf, not gRPC.
+
+`OTEL_EXPORTER_OTLP_HEADERS` accepts the standard comma-separated
+`key=percent-encoded-value` format, for example `Authorization=Bearer%20TOKEN`.
+Use environment secrets, not URL credentials. The selected base URL controls the
+destination; signal-specific endpoint overrides are not used. Redirects are rejected.
+
+Exported fields are deliberately small: service name/version, generated trace/span
+IDs and timestamps, HTTP method, **route templates** and response status, plus
+scan success, book/issue counts and duration. Traces help distinguish failed login,
+library API errors and conflicting playback saves. Successful progress saves,
+media/cover transfers, static assets and health checks are omitted. Each index pass
+produces one scan span. No request/response bodies, cookies, headers, IP addresses,
+usernames, book IDs/titles, searches, filenames or listening positions are collected.
+Application logs are not forwarded. Profile CLI commands and metadata workers do
+not initialize telemetry.
+
+The [OpenTelemetry Rust exporter](https://docs.rs/opentelemetry-otlp/0.33.1/opentelemetry_otlp/)
+runs on a background worker: at most 256 queued spans, batches of 64, a five-second
+flush interval and three-second export timeout. A full queue drops telemetry,
+never playback writes. Collector failures produce local warnings and later batches
+can recover; there is no on-disk spool. Shutdown attempts a flush for up to five
+seconds. Telemetry is best effort, not an audit trail.
 
 ## Backup and recovery
 

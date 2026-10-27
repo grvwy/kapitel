@@ -6,10 +6,10 @@ media. No real library, production database or deployed service was changed.
 | Check | Result |
 | --- | --- |
 | Rust 1.97 formatting and Clippy (`-D warnings`) | Passed |
-| Rust unit/integration tests | 11 passed, including explicit LAN HTTP configuration |
+| Rust unit/integration tests | 14 passed, including explicit LAN HTTP and telemetry opt-in |
 | Chromium and WebKit, desktop and 390 × 844 mobile viewport | Passed |
 | Initial HTML, CSS and JavaScript | 14,541 bytes gzip; budget 100 KiB |
-| Cargo audit, 228 locked packages | Passed with one reviewed maintenance notice; see [security](../SECURITY.md) |
+| Cargo audit, 309 locked packages | Passed with one reviewed maintenance notice; see [security](../SECURITY.md) |
 | GitHub Actions workflow / Compose configuration / shell syntax | Passed |
 | Release Docker build and complete `scripts/test-browser.sh` | Passed |
 | Server resident memory after indexing 1,000 books | 32,420 KiB (31.7 MiB); budget 128 MiB |
@@ -25,6 +25,14 @@ Integration contracts also cover profile isolation, password revocation,
 logout, last-administrator protection, byte ranges, symlink/path escape
 rejection, file replacement, moved/restored books, metadata corrections, a
 missing library root and malformed files.
+
+Telemetry tests start the real binary and decode actual OTLP/HTTP protobuf at a
+local test collector. They verify zero exports without opt-in even with an
+endpoint set, rejection of enabled telemetry without an endpoint, prefixed
+endpoint paths, authentication headers, route templates, an exact attribute
+allowlist and exclusion of synthetic private values/resource environment data.
+Requests remain available after the collector stops, including 300 requests
+exceeding the bounded telemetry queue. No live credentials or backend are used.
 
 The scale check indexed 2 short audiobooks, 6 EPUBs and 992 small, distinct PDF
 fixtures from disk. These are local warm API timings, not internet latency or

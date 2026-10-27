@@ -9,6 +9,9 @@ services:
       - "127.0.0.1:8080:8080"
     environment:
       KAPITEL_PUBLIC_URL: ${KAPITEL_PUBLIC_URL:-http://localhost:8080}
+      KAPITEL_TELEMETRY_ENABLED: ${KAPITEL_TELEMETRY_ENABLED:-false}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      OTEL_EXPORTER_OTLP_HEADERS: ${OTEL_EXPORTER_OTLP_HEADERS:-}
     volumes:
       - ${KAPITEL_LIBRARY_PATH:-./library}:/library:ro
       - kapitel-data:/data

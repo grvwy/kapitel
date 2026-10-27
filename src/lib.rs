@@ -7,6 +7,7 @@ pub mod media;
 pub mod metadata;
 pub mod playback;
 mod sessions;
+pub mod telemetry;
 
 use axum::{
     Json, Router,
@@ -138,6 +139,7 @@ mod config_tests {
 
 #[derive(Clone)]
 pub struct AppState {
+    pub telemetry: Option<opentelemetry_sdk::trace::SdkTracer>,
     pub database: SqlitePool,
     pub config: Config,
     pub scan_requested: Arc<Notify>,
@@ -189,6 +191,7 @@ pub async fn initialize(config: Config) -> anyhow::Result<AppState> {
     }
     let dummy_password_hash = auth::hash_password(&uuid::Uuid::new_v4().to_string())?;
     Ok(AppState {
+        telemetry: None,
         database,
         config,
         scan_requested: Arc::new(Notify::new()),
@@ -284,6 +287,10 @@ pub async fn router(state: AppState) -> anyhow::Result<Router> {
         .layer(middleware::from_fn_with_state(state.clone(), security))
         .layer(session_layer)
         .layer(CompressionLayer::new())
+        .layer(middleware::from_fn_with_state(
+            state.clone(),
+            telemetry::request,
+        ))
         .with_state(state))
 }
 
